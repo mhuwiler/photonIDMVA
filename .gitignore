@@ -8,3 +8,14 @@
 
 #files saved by editors
 *.*~
+
+#images and plots
+*.pdf
+*.png
+*.jpeg
+*.eps
+*.gif
+
+#other stuff
+.lastlxplus
+

@@ -25,7 +25,8 @@
 #include <algorithm>
 
 void plotAnyVariable(TCanvas * can, TCut baseCut, TCut twoDwCut, string varName, TLegend * legend, string label, int nbins, float min, float max, double maxHisto){
-  TFile *File = TFile::Open("/eos/user/k/kmondal/public/FLASHgg/PhotonIDMVA/RunIIFall17/MCv2_February2018/April12/mass95/output_SinglePhoton_Train.root");
+  TFile *File = TFile::Open("/eos/user/m/mhuwiler/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8_reweighted.root");
+// Local computer Mac : /Users/mhuwiler/cernbox/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8_reweighted.root
 
   TTree *t_FakePhotons = (TTree*)File->Get("fakePhotons");
   TTree *t_PromtPhotons = (TTree*)File->Get("promptPhotons");

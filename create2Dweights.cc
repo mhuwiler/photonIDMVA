@@ -23,6 +23,9 @@
 #include <string>
 #include <algorithm>
 
+TString filename = "/eos/user/m/mhuwiler/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8.root";
+// /eos/user/m/mhuwiler/data/added/PhotonID/filename.root // Example file
+
 void create2Dweights(){
 
   const Int_t XBINS = 31;
@@ -44,7 +47,7 @@ void create2Dweights(){
   hPt_vs_Eta_EE_Bkg->GetXaxis()->SetTitle("Pt_{#gamma} (GeV)");
   hPt_vs_Eta_EE_Bkg->GetYaxis()->SetTitle("#eta_{SC}");
 
-  TFile *File = TFile::Open("/eos/user/k/kmondal/public/FLASHgg/PhotonIDMVA/RunIIFall17/MCv2_February2018/April12/mass95/output_GJets_combined_Hgg.root");
+  TFile *File = TFile::Open(filename);
   TDirectory *dir_Photon = (TDirectory*)File->Get("photonViewDumper/trees");
 
   TTree *t_PromtPhotons = (TTree*)dir_Photon->Get("promptPhotons");
