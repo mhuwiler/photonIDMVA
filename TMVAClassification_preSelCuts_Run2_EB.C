@@ -49,6 +49,15 @@
 #include "TMVA/Tools.h"
 #endif
 
+#if $PLATFORM == WorkOSX
+#define eospath "/Users/mhuwiler/cernbox/"
+#elif $PLATFORM == Lxplus
+#define eospath "/eos/user/m/mhuwiler/"
+#else
+#define eospath ""
+#endif
+
+
 void TMVAClassification_preSelCuts_Run2_EB( TString myMethodList = "" )
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
@@ -99,7 +108,8 @@ void TMVAClassification_preSelCuts_Run2_EB( TString myMethodList = "" )
    // --- Here the preparation phase begins
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName( "/eos/user/k/kmondal/public/FLASHgg/PhotonIDMVA/RunIIFall17/MCv2_February2018/April12/mass95/HggPhotonID_94X_barrel_revised.root" );
+    cout << TString() << std::endl;
+   TString outfileName( TString(eospath).Append("data/isodata/PhotonID/GJet_Combined_DoubleEMEnriched_BDT_MVAoutput.root") );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
 
    TMVA::Factory *factory = new TMVA::Factory( "HggPhoId_94X_barrel", outputFile, "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
@@ -120,7 +130,7 @@ void TMVAClassification_preSelCuts_Run2_EB( TString myMethodList = "" )
    dataloader->AddVariable( "scEta", 'F' );
    dataloader->AddVariable( "rho", 'F' );  
 
-   TString fname = "/eos/user/k/kmondal/public/FLASHgg/PhotonIDMVA/RunIIFall17/MCv2_February2018/April12/mass95/output_SinglePhoton_Train.root";
+   TString fname = TString(eospath).Append("data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8_reweighted.root");
    TFile *input = TFile::Open( fname );                 
    TTree *signal     = (TTree*)input->Get("promptPhotons");     
    TTree *background = (TTree*)input->Get("fakePhotons");   

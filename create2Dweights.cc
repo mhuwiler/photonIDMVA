@@ -194,7 +194,7 @@ void create2Dweights(){
   cWeight->SaveAs("PtvsEta_2DWeights.png");
   cWeight->SaveAs("PtvsEta_2DWeights.root");
 
-  TFile fOut("Weights_PtVSeta_Hgg_Gjets_all.root","RECREATE");
+  TFile fOut("/eos/user/m/mhuwiler/data/isodata/PhotonID/Weights_PtVSeta_Hgg_Gjets_all.root","RECREATE");
   fOut.cd();
 
   hWeight_bar->Write("hWeight_bar");

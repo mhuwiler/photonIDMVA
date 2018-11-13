@@ -29,7 +29,7 @@ void add2Dweights(){
   string FileName = "/eos/user/m/mhuwiler/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8.root";
   string outFileName = "/eos/user/m/mhuwiler/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8_reweighted.root";
 
-  TFile fileIn("Weights_PtVSeta_Hgg_Gjets_all.root");
+  TFile fileIn("/eos/user/m/mhuwiler/data/isodata/PhotonID/Weights_PtVSeta_Hgg_Gjets_all.root");
 
   TH2F *hWeightEB = (TH2F*)fileIn.Get("hWeight_bar");
   TH2F *hWeightEE = (TH2F*)fileIn.Get("hWeight_end");
