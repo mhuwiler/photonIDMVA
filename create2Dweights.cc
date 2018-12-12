@@ -23,7 +23,7 @@
 #include <string>
 #include <algorithm>
 
-TString filename = "/eos/user/m/mhuwiler/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8.root";
+TString filename = "$EOSPATH/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8.root";
 // /eos/user/m/mhuwiler/data/added/PhotonID/filename.root // Example file
 
 void create2Dweights(){
@@ -194,7 +194,7 @@ void create2Dweights(){
   cWeight->SaveAs("PtvsEta_2DWeights.png");
   cWeight->SaveAs("PtvsEta_2DWeights.root");
 
-  TFile fOut("/eos/user/m/mhuwiler/data/isodata/PhotonID/Weights_PtVSeta_Hgg_Gjets_all.root","RECREATE");
+  TFile fOut("$EOSPATH/data/isodata/PhotonID/Weights_PtVSeta_Hgg_Gjets_all.root","RECREATE");
   fOut.cd();
 
   hWeight_bar->Write("hWeight_bar");

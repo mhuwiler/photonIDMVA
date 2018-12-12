@@ -19,3 +19,11 @@
 #other stuff
 .lastlxplus
 
+#development directory
+
+development/*
+Hgg_Revised/*
+
+# TF model 
+*.h5
+

@@ -26,10 +26,10 @@
 
 void add2Dweights(){
 
-  string FileName = "/eos/user/m/mhuwiler/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8.root";
-  string outFileName = "/eos/user/m/mhuwiler/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8_reweighted.root";
+  string FileName = "$EOSPATH/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8.root";
+  string outFileName = "$EOSPATH/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8_reweighted.root";
 
-  TFile fileIn("/eos/user/m/mhuwiler/data/isodata/PhotonID/Weights_PtVSeta_Hgg_Gjets_all.root");
+  TFile fileIn("$EOSPATH/data/isodata/PhotonID/Weights_PtVSeta_Hgg_Gjets_all.root");
 
   TH2F *hWeightEB = (TH2F*)fileIn.Get("hWeight_bar");
   TH2F *hWeightEE = (TH2F*)fileIn.Get("hWeight_end");
@@ -75,8 +75,10 @@ void add2Dweights(){
   float PtvsEtaWeight_sig_train;
   float rhoRew_sig;
   float rhoRew_bkg;
+    float backgroundWeight = 1.;
 
   t_sig_train->Branch("PtvsEtaWeight",&PtvsEtaWeight_sig_train, "PtvsEtaWeight/F");
+    t_bkg_train->Branch("PtvsEtaWeight",&backgroundWeight, "PtvsEtaWeight/F");          // We also set a background weight (to 1) s.t. signal and background can be treated in the same way later on
   //t_sig_train->Branch("rhoRew",&rhoRew_sig, "rhoRew/F");
   //t_bkg_train->Branch("rhoRew",&rhoRew_bkg, "rhoRew/F");
 
@@ -117,7 +119,7 @@ void add2Dweights(){
     */
     //rhoRew_sig = 1.;
     PtvsEtaWeight_sig_train = weightPtEta;
-    if(s4_sig > -2 && s4_sig < 2 && i%2 == 1)      t_sig_train->Fill();
+    if(s4_sig > -2 && s4_sig < 2)      t_sig_train->Fill();     //  && i%2 == 1 (used to be a split into train and test at this level)
 
   }
 
@@ -138,7 +140,7 @@ void add2Dweights(){
     else rhoRew_bkg = 1;
     */
     //rhoRew_bkg = 1.;
-    if(s4_bkg > -2 && s4_bkg < 2 && k%2 == 1)  t_bkg_train->Fill();
+    if(s4_bkg > -2 && s4_bkg < 2 )  t_bkg_train->Fill();     // && k%2 == 1 idem
 
   }
 

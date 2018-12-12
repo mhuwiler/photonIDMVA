@@ -42,15 +42,13 @@
 
 //#include "TMVAGui.C"
 
-//#if not defined(__CINT__) || defined(__MAKECINT__)
+#if not defined(__CINT__) || defined(__MAKECINT__)
 // needs to be included when makecint runs (ACLIC)
 #include "TMVA/Factory.h"
-#include "TMVA/DataLoader.h"
 #include "TMVA/Tools.h"
-//#endif
+#endif
 
-
-void TMVAClassification_preSelCuts_Run2_EB( TString runname = "", TString myMethodList = "" )
+void TMVAClassification_preSelCuts_Run2( TString myMethodList = "" )
 {
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
    // if you use your private .rootrc, or run from a different directory, please copy the
@@ -70,7 +68,6 @@ void TMVAClassification_preSelCuts_Run2_EB( TString runname = "", TString myMeth
    //---------------------------------------------------------------
    // This loads the library
    TMVA::Tools::Instance();
-   TMVA::PyMethodBase::PyInitialize(); 
 
    // Default MVA methods to be trained + tested
    std::map<std::string,int> Use;
@@ -101,57 +98,42 @@ void TMVAClassification_preSelCuts_Run2_EB( TString runname = "", TString myMeth
    // --- Here the preparation phase begins
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName( "$EOSPATH/data/isodata/PhotonID/GJet_Combined_DoubleEMEnriched_BDT_MVAoutput"+runname+".root" );
+   TString outfileName( "HggPhotonID_80X_barrel.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
 
-   TMVA::Factory *factory = new TMVA::Factory( runname, outputFile, "!V:!Silent:Color:DrawProgressBar:Transformations=:AnalysisType=Classification" );
+   TMVA::Factory *factory = new TMVA::Factory( "HggPhoId_80X_barrel", outputFile, "!V:!Silent:Color:DrawProgressBar:Transformations=I;D;P;G,D:AnalysisType=Classification" );
   
-   TMVA::DataLoader *dataloader = new TMVA::DataLoader("Hgg_Revised");
+   factory->AddVariable( "SCRawE", 'F' );  
+   factory->AddVariable( "r9", 'F' );
+   factory->AddVariable( "sigmaIetaIeta", 'F' );
+   factory->AddVariable( "etaWidth", 'F' );
+   factory->AddVariable( "phiWidth", 'F' );
+   factory->AddVariable( "covIEtaIPhi", 'F' ); 
+   factory->AddVariable( "s4", 'F' );
+   factory->AddVariable( "phoIso03", 'F' );
+   factory->AddVariable( "chgIsoWrtChosenVtx", 'F' );
+   factory->AddVariable( "chgIsoWrtWorstVtx", 'F' );
+   factory->AddVariable( "scEta", 'F' );
+   factory->AddVariable( "rho", 'F' );  
 
-   dataloader->AddVariable( "SCRawE", 'F' );  
-   dataloader->AddVariable( "r9", 'F' );
-   dataloader->AddVariable( "sigmaIetaIeta", 'F' );
-   dataloader->AddVariable( "etaWidth", 'F' );
-   dataloader->AddVariable( "phiWidth", 'F' );
-   dataloader->AddVariable( "covIEtaIPhi", 'F' ); 
-   dataloader->AddVariable( "s4", 'F' );
-   dataloader->AddVariable( "phoIso03", 'F' );
-   //dataloader->AddVariable( "phoIsoCorr", 'F' );
-   dataloader->AddVariable( "chgIsoWrtChosenVtx", 'F' );
-   dataloader->AddVariable( "chgIsoWrtWorstVtx", 'F' );
-   dataloader->AddVariable( "scEta", 'F' );
-   dataloader->AddVariable( "rho", 'F' );  
-
-   TString fname = "$EOSPATH/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8_reweighted_split.root";
+   TString fname = "$EOSPATH/data/added/PhotonID/output_GJet_Combined_DoubleEMEnriched_TuneCP5_13TeV_Pythia8_reweighted.root";
    TFile *input = TFile::Open( fname );                 
-   TTree *signalTrain     = (TTree*)input->Get("SignalTrain");
-   TTree *backgroundTrain = (TTree*)input->Get("BackgroundTrain");
-    TTree *signalTest     = (TTree*)input->Get("SignalTest");
-    TTree *backgroundTest = (TTree*)input->Get("BackgroundTest");
+   TTree *signal     = (TTree*)input->Get("promptPhotons");     
+   TTree *background = (TTree*)input->Get("fakePhotons");   
 
-   dataloader->SetSignalWeightExpression( "weight*PtvsEtaWeight" );
-   dataloader->SetBackgroundWeightExpression( "weight*PtvsEtaWeight" );
+   factory->SetSignalWeightExpression( "weight*PtvsEtaWeight" );
+   factory->SetBackgroundWeightExpression( "weight" );
 
-    
-    Double_t globalSigWeight = 1.0;
-    Double_t globalBkgWeight = 1.0;
-    
-    dataloader->AddSignalTree(signalTrain, globalSigWeight, TMVA::Types::kTraining);
-    dataloader->AddBackgroundTree(backgroundTrain, globalBkgWeight, TMVA::Types::kTraining);
-    dataloader->AddSignalTree(signalTest, globalSigWeight, TMVA::Types::kTesting);
-    dataloader->AddBackgroundTree(backgroundTest, globalBkgWeight, TMVA::Types::kTesting);
-    
-    
+   factory->AddSignalTree( signal);
+   factory->AddBackgroundTree( background );
    
    TCut mycuts = "abs(scEta)>0 && abs(scEta)<1.5 && s4>-2 && s4<2";
    TCut mycutb = "abs(scEta)>0 && abs(scEta)<1.5 && s4>-2 && s4<2";
 
-    dataloader->PrepareTrainingAndTestTree( mycuts, mycutb, "nTrain_Signal=100000:nTrain_Background=100000:nTest_Signal=100000:nTest_Background=100000:SplitMode=Random:NormMode=EqualNumEvents" ); //NumEvents
-    // old : nTrain_Signal=1000:nTrain_Background=1000:SplitMode=Random:NormMode=EqualNumEvents:!V  // tested : nTrain_Signal=1000:nTrain_Background=1000:nTest_Signal=1000:nTest_Background=1000:SplitMode=Alternate:NormMode=EqualNumEvents:!V SplitMode=Random:SplitSeed=25
+   factory->PrepareTrainingAndTestTree( mycuts, mycutb,
+                                        "nTrain_Signal=10000:nTrain_Background=10000:SplitMode=Random:NormMode=EqualNumEvents:!V" ); //NumEvents
 
-    factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6"); // old :  H:V:NTrees=400:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=Decorrelate
-    TString trainingstring = "H:V:VarTransform=N:FilenameModel=model1.h5:NumEpochs=100:BatchSize=256";
-    //factory->BookMethod( dataloader, TMVA::Types::kPyKeras, "PyKeras", trainingstring);
+   factory->BookMethod( TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6");
 
 
    // Train MVAs using the set of training events
