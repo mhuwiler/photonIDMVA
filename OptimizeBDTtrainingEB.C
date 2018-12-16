@@ -50,8 +50,15 @@
 //#endif
 
 
-void TMVAClassification_preSelCuts_Run2_EB( TString runname = "", TString myMethodList = "" )
+void OptimizeBDTtrainingEB( Int_t nTrees, Double_t nodeSize, Int_t maxDepth, TString boostType, Int_t nCuts, TString transformations = "" )
 {
+    
+   TString myMethodList = "";
+    Double_t learningRateBoost = 0.5;
+    
+    TString  runname = TString::Format("OptimizeBDTnTrees%dnodeSize%.2fmaxDepth%dnCuts%dboostType"+boostType+"transformations"+transformations, nTrees, nodeSize, maxDepth, nCuts);
+    cout << runname;
+    
    // The explicit loading of the shared libTMVA is done in TMVAlogon.C, defined in .rootrc
    // if you use your private .rootrc, or run from a different directory, please copy the
    // corresponding lines from .rootrc
@@ -101,12 +108,14 @@ void TMVAClassification_preSelCuts_Run2_EB( TString runname = "", TString myMeth
    // --- Here the preparation phase begins
 
    // Create a ROOT output file where TMVA will store ntuples, histograms, etc.
-   TString outfileName( "$EOSPATH/data/isodata/PhotonID/GJet_Combined_DoubleEMEnriched_BDT_MVAoutput"+runname+".root" );
+   TString outfileName( "output.root" );
    TFile* outputFile = TFile::Open( outfileName, "RECREATE" );
+    
+    
 
    TMVA::Factory *factory = new TMVA::Factory( runname, outputFile, "!V:!Silent:Color:DrawProgressBar:Transformations=:AnalysisType=Classification" );
   
-   TMVA::DataLoader *dataloader = new TMVA::DataLoader("Hgg_Revised");
+   TMVA::DataLoader *dataloader = new TMVA::DataLoader("model");
 
    dataloader->AddVariable( "SCRawE", 'F' );  
    dataloader->AddVariable( "r9", 'F' );
@@ -136,24 +145,26 @@ void TMVAClassification_preSelCuts_Run2_EB( TString runname = "", TString myMeth
     Double_t globalSigWeight = 1.0;
     Double_t globalBkgWeight = 1.0;
     
-    //dataloader->AddSignalTree(signalTrain, globalSigWeight, TMVA::Types::kTraining);
-    //dataloader->AddBackgroundTree(backgroundTrain, globalBkgWeight, TMVA::Types::kTraining);
-    //dataloader->AddSignalTree(signalTest, globalSigWeight, TMVA::Types::kTesting);
-    //dataloader->AddBackgroundTree(backgroundTest, globalBkgWeight, TMVA::Types::kTesting);
+    dataloader->AddSignalTree(signalTrain, globalSigWeight, TMVA::Types::kTraining);
+    dataloader->AddBackgroundTree(backgroundTrain, globalBkgWeight, TMVA::Types::kTraining);
+    dataloader->AddSignalTree(signalTest, globalSigWeight, TMVA::Types::kTesting);
+    dataloader->AddBackgroundTree(backgroundTest, globalBkgWeight, TMVA::Types::kTesting);
     
-    dataloader->AddSignalTree( signalTrain );
-    dataloader->AddBackgroundTree( backgroundTrain );
+    
    
    TCut mycuts = "abs(scEta)>0 && abs(scEta)<1.5 && s4>-2 && s4<2";
    TCut mycutb = "abs(scEta)>0 && abs(scEta)<1.5 && s4>-2 && s4<2";
 
-    dataloader->PrepareTrainingAndTestTree( mycuts, mycutb, "nTrain_Signal=3000000:nTrain_Background=3000000:nTest_Signal=3000000:nTest_Background=3000000:SplitMode=Random:NormMode=EqualNumEvents" ); //NumEvents
+    dataloader->PrepareTrainingAndTestTree( mycuts, mycutb, "nTrain_Signal=1000:nTrain_Background=1000:nTest_Signal=1000:nTest_Background=1000:SplitMode=Random:NormMode=EqualNumEvents" ); //NumEvents
     // old : nTrain_Signal=1000:nTrain_Background=1000:SplitMode=Random:NormMode=EqualNumEvents:!V  // tested : nTrain_Signal=1000:nTrain_Background=1000:nTest_Signal=1000:nTest_Background=1000:SplitMode=Alternate:NormMode=EqualNumEvents:!V SplitMode=Random:SplitSeed=25
-
-    factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT", "!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6"); // old :  H:V:NTrees=400:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=Decorrelate
-    TString trainingstring = "H:V:VarTransform=N:FilenameModel=model1.h5:NumEpochs=100:BatchSize=256";
-    //factory->BookMethod( dataloader, TMVA::Types::kPyKeras, "PyKeras", trainingstring);
-
+    
+    TString trainingstring = TString::Format("!H:!V:NTrees=%d:MinNodeSize=%f%:MaxDepth=%d:nCuts=%d:BoostType="+boostType+":SeparationType=GiniIndex:VarTransform="+transformations, nTrees, nodeSize, maxDepth, nCuts);
+    //"!H:!V:NTrees=2000:BoostType=Grad:Shrinkage=0.10:!UseBaggedGrad:nCuts=2000:UseNvars=4:PruneStrength=5:PruneMethod=CostComplexity:MaxDepth=6"
+    // old :  H:V:NTrees=400:MinNodeSize=5%:MaxDepth=3:BoostType=AdaBoost:SeparationType=GiniIndex:nCuts=20:VarTransform=Decorrelate
+    // For DNN : trainingstring = 'H:!V:FilenameModel='+modelfilename+':VarTransform='+transformations + ':NumEpochs={}'.format(numEpochs) + ':BatchSize={}'.format(batchSize) + ':TriesEarlyStopping={}'.format(triesEarlyStopping)
+    
+    factory->BookMethod( dataloader, TMVA::Types::kBDT, "BDT", trainingstring );
+    
 
    // Train MVAs using the set of training events
    factory->TrainAllMethods();
@@ -173,5 +184,7 @@ void TMVAClassification_preSelCuts_Run2_EB( TString runname = "", TString myMeth
    std::cout << "==> TMVAClassification is done!" << std::endl;
 
    delete factory;
+    
+    exit(0); 
 
 }
