@@ -1,6 +1,7 @@
 #include <string>
 #include <iostream>
 #include <map>
+#include <vector>
 
 #include "TChain.h"
 #include "TFile.h"
@@ -41,62 +42,57 @@ void setStyle(TGraph* graph) {
 }
 	
 
-void plotMultipleGraphs(vector<TGraph*> graphs, TCanvas* canvas) {
+void plotMultipleGraphs(vector<std::pair<TGraph*, TString> > graphs, TCanvas* canvas) {
 
 	//TCanvas *canvas = new TCanvas("canvas", "ROC curves", 800, 600); 
 	vector<Int_t> colors = {1, 4, 2, 3, 6, 7, 5, 9, 8, 15}; 
 
+	if (graphs.size() > 10) {
+		std::cout << "You are trying to draw more than 10 graphs on the same plot. You may need a more elaborate color handling. " << std::endl; 
+		return; 
+	}
+
 	canvas->cd(); 
 
-	TGraph* curve1 = graphs.at(0); 
-	curve1->SetTitle("");
-	curve1->SetLineColor(kWhite);	//blue
-	curve1->SetMarkerColor(kWhite);
-	//curve1->GetYaxis()->SetRangeUser(0.055, 0.2)	// TSetting axis range must be done on the first graph to be plotted (with potion A);
-	
-	TGraph *curve2 = graphs.at(1);
-	curve2->SetMarkerColor(2);	//red
-	curve2->SetLineColor(2);
-
-	TGraph *curve3 = graphs.at(2);
-	curve3->SetMarkerColor(3);	//red
-	curve3->SetLineColor(3);
-
-	TGraph *curve4 = graphs.at(3);
-	curve4->SetMarkerColor(1);	//red
-	curve4->SetLineColor(1);
-
-	//TGraph *curve3 = graphs.at(2); 
-	//curve3->SetMarkerColor(3); 
-	//curve3->SetLineColor(3); 
-
 	TLegend *legend = new TLegend(0.11, 0.11, 0.7, 0.3);
-	legend->AddEntry(curve1, "Current (retrained)", "p");
-	legend->AddEntry(curve2, "Best from grid scan", "p");
-	//legend->AddEntry(curve3, "XGBoost with bayesian optimisation", "p"); 
-	legend->AddEntry(curve3, "XGBoost w. Bayesian optimization", "p");
-	legend->AddEntry(curve4, "Current in production (benchmark)", "p");
+
+	for (unsigned int i=0; i < graphs.size(); i++) 
+	{
+		TGraph *curve = graphs.at(i).first; 
+
+		curve->SetTitle("");
+		curve->SetLineColor(colors.at(i));
+		curve->SetMarkerColor(colors.at(i)); 
+
+		if (i==0) {
+			curve->Draw("AP."); 
+			//curve->GetYaxis()->SetRangeUser(0.055, 0.2)	// Setting axis range must be done on the first graph to be plotted (with option A);
+
+		}
+		else 
+		{
+			curve->Draw("P.");
+		}
+
+		setStyle(curve);
+		
+		legend->AddEntry(curve, graphs.at(i).second, "p");		
+	
+	
+	
+
+	}
+
 	legend->SetTextSize(0.04);
 
 	
-	//setStyle(curve3); 
-	
-	curve1->Draw("AP.");
-	curve2->Draw("P.");
-	curve3->Draw("P."); 
-	curve4->Draw("P."); 
-	setStyle(curve1);
-	setStyle(curve2);
-	setStyle(curve3); 
-	setStyle(curve4); 
-	//curve3->Draw("P.");
+
 	legend->Draw();
 	canvas->Modified(); 
 	canvas->Update(); 
 	//canvas->Draw();
 
-	//return canvas
-
+	
 } 
 	
 void plotTrainingResults (bool isEndcap = false) {
@@ -115,7 +111,7 @@ void plotTrainingResults (bool isEndcap = false) {
 	else {
 		currentTraining = "$EOSPATH/software/PhotonID/photonIDMVA/development/getroc/ROCexisting.root"; 
 		currentFlashgg = "$EOSPATH/data/isodata/PhotonID/ROC/ROCexistingFggBarrel.root"; 
-		bestFromOptimisation = "/afs/cern.ch/work/m/mhuwiler/lsfjobs/ScanFirstRunBarrel/nTrees100nodeSize0_5treeDepth2nCuts2000separationGiniIndexboostTypeGradlearningRate0_01boostSecond0nVars0pruneMethodCostComplexitypruneStrength5Barrel/plots.root"; 
+		bestFromOptimisation = "/afs/cern.ch/work/m/mhuwiler/lsfjobs/ScanSecondRunBarrel/nTrees100nodeSize0_5treeDepth2nCuts2000separationGiniIndexboostTypeGradlearningRate0_01boostSecond0nVars0pruneMethodCostComplexitypruneStrength5Barrel/plots.root"; 
 		xgboostTraining = "/afs/cern.ch/work/m/mhuwiler/lsfjobs/XgboWeightSecondRunBarrel/plots.root"; 
 	}
 
@@ -132,7 +128,18 @@ void plotTrainingResults (bool isEndcap = false) {
 
 	TCanvas *canvas = new TCanvas("canvas", "ROC for PhotonID MVA (Barrel)", 800., 600.);
 
-	vector<TGraph*> graphs = {ROCcurrent, ROCbest, ROCxgboost, ROCexisting }; 
+	std::vector<std::pair<TGraph*, TString> > graphs = {	std::pair<TGraph*, TString>(ROCcurrent, "Current (retrained)"), 
+															std::pair<TGraph*, TString>(ROCbest, "Best from grid scan"), 
+															std::pair<TGraph*, TString>(ROCxgboost, "XGBoost w. Bayesian optimization"), 
+															std::pair<TGraph*, TString>(ROCexisting, "Current in production (benchmark)") 
+														}; 
+
+	/*vector<TString*> captions = {	"Current (retrained)", 
+									"Best from grid scan", 
+									"XGBoost w. Bayesian optimization", 
+									"Current in production (benchmark)", 
+								}; */
+
 	//vector<TGraph*> graphs = {ROCcurrent, ROCbest }; 
 
 	plotMultipleGraphs(graphs, canvas); 
